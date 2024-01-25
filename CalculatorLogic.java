@@ -58,95 +58,118 @@ public class CalculatorLogic extends BaseCalculatorLogic {
         return true;
     }
 
-    
     private boolean isOperator(char c) {
         // Check if the character is an arithmetic operator
         return c == '+' || c == '-' || c == '*' || c == '/';
     }
     
     private void evaluateExpression(String expression) {
-        try {
-            // Split the expression into individual operations
-            String[] operations = expression.split("(?<=[-+*/=])|(?=[-+*/=])");
-    
-            // Convert the array to a list for easy removal of elements
-            List<String> operationList = new ArrayList<>(Arrays.asList(operations));
-    
-            // Process brackets first
-            while (operationList.contains("(")) {
-                int openIndex = operationList.lastIndexOf("(");
-                int closeIndex = operationList.subList(openIndex, operationList.size()).indexOf(")") + openIndex;
-    
-                if (openIndex >= 0 && closeIndex > openIndex) {
-                    // Evaluate the expression within the brackets
-                    evaluateExpression(String.join("", operationList.subList(openIndex + 1, closeIndex)));
-    
-                    // Replace the bracketed expression with its result
-                    operationList.subList(openIndex, closeIndex + 1).clear();
-                    operationList.add(openIndex, String.valueOf(result));
-                } else {
-                    // Mismatched brackets
-                    textfield.setText("Error");
+    try {
+        // Split the expression into individual operations
+        String[] operations = expression.split("(?<=[-+*/=])|(?=[-+*/=])");
+
+        // Convert the array to a list for easy removal of elements
+        List<String> operationList = new ArrayList<>(Arrays.asList(operations));
+
+        // Process brackets first
+        while (operationList.contains("(")) {
+            int openIndex = operationList.lastIndexOf("(");
+            int closeIndex = operationList.subList(openIndex, operationList.size()).indexOf(")") + openIndex;
+
+            if (openIndex >= 0 && closeIndex > openIndex) {
+                // Evaluate the expression within the brackets
+                evaluateExpression(String.join("", operationList.subList(openIndex + 1, closeIndex)));
+
+                // Replace the bracketed expression with its result
+                operationList.subList(openIndex, closeIndex + 1).clear();
+                operationList.add(openIndex, String.valueOf(result));
+            } else {
+                // Mismatched brackets
+                textfield.setText("Error");
+                return;
+            }
+        }
+
+        // Process powers/exponents
+        for (int i = 0; i < operationList.size(); i++) {
+            if (operationList.get(i).equals("^")) {
+                double base = Double.parseDouble(operationList.get(i - 1));
+                double exponent = Double.parseDouble(operationList.get(i + 1));
+                double result = Math.pow(base, exponent);
+
+                // Replace the base, exponent, and "^" with the result
+                operationList.subList(i - 1, i + 2).clear();
+                operationList.add(i - 1, String.valueOf(result));
+                i--; // Move back to the updated position
+            }
+        }
+
+        // Process multiplication and division from left to right
+        while (operationList.contains("*") || operationList.contains("/")) {
+            int multiplyIndex = operationList.indexOf("*");
+            int divideIndex = operationList.indexOf("/");
+
+            if ((multiplyIndex < divideIndex && multiplyIndex != -1) || divideIndex == -1) {
+                // Process multiplication
+                double operand1 = Double.parseDouble(operationList.get(multiplyIndex - 1));
+                double operand2 = Double.parseDouble(operationList.get(multiplyIndex + 1));
+                double result = operand1 * operand2;
+
+                // Replace the operands and operator with the result
+                operationList.subList(multiplyIndex - 1, multiplyIndex + 2).clear();
+                operationList.add(multiplyIndex - 1, String.valueOf(result));
+            } else {
+                // Process division
+                double operand1 = Double.parseDouble(operationList.get(divideIndex - 1));
+                double operand2 = Double.parseDouble(operationList.get(divideIndex + 1));
+
+                // Check for division by zero
+                if (operand2 == 0) {
+                    textfield.setText("Error: Division by zero");
                     return;
                 }
+
+                double result = operand1 / operand2;
+
+                // Replace the operands and operator with the result
+                operationList.subList(divideIndex - 1, divideIndex + 2).clear();
+                operationList.add(divideIndex - 1, String.valueOf(result));
             }
-    
-            // Process powers/exponents
-            for (int i = 0; i < operationList.size(); i++) {
-                if (operationList.get(i).equals("^")) {
-                    double base = Double.parseDouble(operationList.get(i - 1));
-                    double exponent = Double.parseDouble(operationList.get(i + 1));
-                    double result = Math.pow(base, exponent);
-    
-                    // Replace the base, exponent, and "^" with the result
-                    operationList.subList(i - 1, i + 2).clear();
-                    operationList.add(i - 1, String.valueOf(result));
-                    i--; // Move back to the updated position
-                }
+        }
+
+        // Process addition and subtraction
+        for (String operator : new String[]{"+", "-"}) {
+            while (operationList.contains(operator)) {
+                int operatorIndex = operationList.indexOf(operator);
+
+                double operand1 = Double.parseDouble(operationList.get(operatorIndex - 1));
+                double operand2 = Double.parseDouble(operationList.get(operatorIndex + 1));
+                double result = operator.equals("+") ? operand1 + operand2 : operand1 - operand2;
+
+                // Replace the operands and operator with the result
+                operationList.subList(operatorIndex - 1, operatorIndex + 2).clear();
+                operationList.add(operatorIndex - 1, String.valueOf(result));
             }
-    
-            // Process multiplication and division
-            for (String operator : new String[]{"*", "/"}) {
-                while (operationList.contains(operator)) {
-                    int operatorIndex = operationList.indexOf(operator);
-    
-                    double operand1 = Double.parseDouble(operationList.get(operatorIndex - 1));
-                    double operand2 = Double.parseDouble(operationList.get(operatorIndex + 1));
-                    double result = operator.equals("*") ? operand1 * operand2 : operand1 / operand2;
-    
-                    // Replace the operands and operator with the result
-                    operationList.subList(operatorIndex - 1, operatorIndex + 2).clear();
-                    operationList.add(operatorIndex - 1, String.valueOf(result));
-                }
-            }
-    
-            // Process addition and subtraction
-            for (String operator : new String[]{"+", "-"}) {
-                while (operationList.contains(operator)) {
-                    int operatorIndex = operationList.indexOf(operator);
-    
-                    double operand1 = Double.parseDouble(operationList.get(operatorIndex - 1));
-                    double operand2 = Double.parseDouble(operationList.get(operatorIndex + 1));
-                    double result = operator.equals("+") ? operand1 + operand2 : operand1 - operand2;
-    
-                    // Replace the operands and operator with the result
-                    operationList.subList(operatorIndex - 1, operatorIndex + 2).clear();
-                    operationList.add(operatorIndex - 1, String.valueOf(result));
-                }
-            }
-    
-            // The final result should be at the first position in the list
-            this.result = Double.parseDouble(operationList.get(0));
-    
-            // Update the textfield with the result
+        }
+
+        // The final result should be at the first position in the list
+        this.result = Double.parseDouble(operationList.get(0));
+
+        // Check if the result is an integer (ending with .00)
+        if (this.result % 1 == 0) {
+            // If it's an integer, format without decimal places
+            textfield.setText(String.format("%.0f", this.result));
+        } else {
+            // If it's not an integer, format with two decimal places
             textfield.setText(String.format("%.2f", this.result));
-        } catch (NumberFormatException | ArithmeticException e) {
-            // Handle invalid number format or arithmetic errors
-            textfield.setText("Error");
+        }
+            } catch (NumberFormatException | ArithmeticException e) {
+        // Handle invalid number format or arithmetic errors
+        textfield.setText("Error");
         }
     }
 
-
+    
     @Override
     public void handleModeSelection(int modeChoice) {
         switch (modeChoice) {
@@ -206,7 +229,7 @@ public class CalculatorLogic extends BaseCalculatorLogic {
                 break;
         }
         textfield.setText(String.format("%.2f", result));
-        updateHistory(num1 + "  " + operator + "  " + num2 + " = " + String.format("%.2f", result));
+        updateHistory(num1 + " " + operator + " " + num2 + " = " + String.format("%.2f", result));
     }
     protected void handlePercentOperation(String currentText) {
         try {
@@ -224,9 +247,8 @@ public class CalculatorLogic extends BaseCalculatorLogic {
         // Validate if the current expression is valid for the percent operation
         if (!isValidExpression(currentText, '%')) {
             textfield.setText("Error");
-            return;
+            return ;
         }
-    
         handlePercentOperation(currentText);
     }
     
@@ -381,12 +403,21 @@ public class CalculatorLogic extends BaseCalculatorLogic {
     
     public void handleDelete() {
         String currentText = textfield.getText();
-
+    
         // Check if the current expression is not empty
         if (!currentText.isEmpty() && !currentText.equals("Error")) {
-            // Remove the last character from the current expression
-            String newText = currentText.substring(0, currentText.length() - 1);
-            textfield.setText(newText);
+            // Determine the last non-space character to handle deletion properly
+            int lastIndex = currentText.length() - 1;
+            while (lastIndex >= 0 && currentText.charAt(lastIndex) == ' ') {
+                lastIndex--;
+            }
+    
+            // Remove the last character or entire operand/operator
+            if (lastIndex >= 0) {
+                textfield.setText(currentText.substring(0, lastIndex).trim());
+            } else {
+                textfield.setText("");  // Set to an empty string if nothing to delete
+            }
         }
     }
 
@@ -396,51 +427,56 @@ public class CalculatorLogic extends BaseCalculatorLogic {
         while (continueRoundOff) {
             String inputAmount = JOptionPane.showInputDialog(null, "Enter amount to round off:");
     
-            if (inputAmount != null && !inputAmount.isEmpty()) {
-                try {
-                    double amountToRound = Double.parseDouble(inputAmount);
+        if (inputAmount != null && !inputAmount.isEmpty()) {
+            if(inputAmount.contains("."))
+                {
+                    JOptionPane.showMessageDialog(null, "Decimal number is not within standard 1 to 3 syllabus!", "Warning", JOptionPane.WARNING_MESSAGE);
+                    break;
+                }
+            try {
+                double amountToRound = Double.parseDouble(inputAmount);
+
+                String[] options = {"Ten", "Hundred", "Thousand"};
+                int choice = JOptionPane.showOptionDialog(
+                        null,
+                        "Select round off option:",
+                        "Round Off Options",
+                        JOptionPane.DEFAULT_OPTION,
+                        JOptionPane.QUESTION_MESSAGE,
+                        null,
+                        options,
+                        options[0]
+                );
+
+                double roundedAmount;
     
-                    String[] options = {"Ten", "Hundred", "Thousand"};
-                    int choice = JOptionPane.showOptionDialog(
-                            null,
-                            "Select round off option:",
-                            "Round Off Options",
-                            JOptionPane.DEFAULT_OPTION,
-                            JOptionPane.QUESTION_MESSAGE,
-                            null,
-                            options,
-                            options[0]
-                    );
-    
-                    double roundedAmount;
-    
-                    switch (choice) {
-                        case 0:
-                            roundedAmount = roundOffToNearest(amountToRound, 10);
-                            break;
-                        case 1:
-                            roundedAmount = roundOffToNearest(amountToRound, 100);
-                            break;
-                        case 2:
-                            roundedAmount = roundOffToNearest(amountToRound, 1000);
-                            break;
-                        default:
-                            roundedAmount = amountToRound; // Default to no rounding
-                    }
-    
-                    int option = JOptionPane.showOptionDialog(
-                            null,
-                            "Original amount: " + amountToRound + "\nRounded off to nearest " + options[choice] + ": " + roundedAmount,
-                            "Round Off Result",
-                            JOptionPane.DEFAULT_OPTION,
-                            JOptionPane.INFORMATION_MESSAGE,
-                            null,
-                            new Object[]{"OK", "Round Off Again"},
-                            "OK"
-                    );
-    
-                    continueRoundOff = (option == 1); // Continue if "Round Off Again" is chosen
-    
+                switch (choice) {
+                    case 0:
+                        roundedAmount = roundOffToNearest(amountToRound, 10);
+                        break;
+                    case 1:
+                        roundedAmount = roundOffToNearest(amountToRound, 100);
+                        break;
+                    case 2:
+                        roundedAmount = roundOffToNearest(amountToRound, 1000);
+                        break;
+                    default:
+                        roundedAmount = amountToRound; // Default to no rounding
+                }
+
+                int option = JOptionPane.showOptionDialog(
+                    null,
+                    "Original amount: " + amountToRound + "\nRounded off to nearest " + options[choice] + ": " + roundedAmount,
+                    "Round Off Result",
+                    JOptionPane.DEFAULT_OPTION,
+                    JOptionPane.INFORMATION_MESSAGE,
+                    null,
+                    new Object[]{"OK", "Round Off Again"},
+                    "OK"
+                );
+
+                continueRoundOff = (option == 1); // Continue if "Round Off Again" is chosen
+
                 } catch (NumberFormatException e) {
                     JOptionPane.showMessageDialog(null, "Invalid input. Please enter a valid number.");
                 }

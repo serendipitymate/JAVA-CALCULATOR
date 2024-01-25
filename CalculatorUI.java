@@ -8,7 +8,7 @@ public class CalculatorUI implements ActionListener {
     private JFrame frame;
     private JTextField textfield;
     private JButton[] numberButtons = new JButton[10];
-    private JButton[] functionButtons = new JButton[8];
+    private JButton[] functionButtons = new JButton[9];
     private JButton addButton, subButton, mulButton, divButton, decButton, equButton, delButton, clrButton, percentButton;
     private JButton modeButton; // Added mode button
     private JPanel panel;
@@ -35,9 +35,9 @@ public class CalculatorUI implements ActionListener {
         divButton = new JButton("/");
         decButton = new JButton(".");
         equButton = new JButton("=");
-        delButton = new JButton("DEL");
-        delButton.addActionListener(e -> calculatorLogic.handleDelete());
-        clrButton = new JButton("AC");
+        delButton = new JButton("DELETE");
+
+        clrButton = new JButton("CLEAR");
         
         textfield.setBackground(new Color(240, 240, 240)); // Light Gray
         textfield.setForeground(Color.DARK_GRAY);
@@ -69,6 +69,7 @@ public class CalculatorUI implements ActionListener {
         functionButtons[5] = equButton;
         functionButtons[6] = delButton;
         functionButtons[7] = clrButton;
+        functionButtons[8] = percentButton;
         
         calculatorLogic = new CalculatorLogic(textfield);
 
@@ -128,6 +129,8 @@ public class CalculatorUI implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == modeButton) {
             handleModeSelection(); // Handle mode button click event
+        } else if (e.getSource() == delButton) {
+            calculatorLogic.handleDelete();
         } else {
             for (int i = 0; i < 10; i++) {
                 if (e.getSource() == numberButtons[i]) {
@@ -138,27 +141,15 @@ public class CalculatorUI implements ActionListener {
                 // Handle percent button click event
                 calculatorLogic.handlePercent();
             }
-
-            /*if (e.getSource() == decButton) {
-                textfield.setText(textfield.getText().concat("."));
-            } */
-
-            for (int i = 0; i < 9; i++) {
+    
+            for (int i = 0; i < functionButtons.length; i++) {
                 if (e.getSource() == functionButtons[i]) {
                     calculatorLogic.performOperation(functionButtons[i].getText().charAt(0));
                 }
             }
-
+    
             if (e.getSource() == clrButton) {
                 textfield.setText("");
-            }
-
-            if (e.getSource() == delButton) {
-                String string = textfield.getText();
-                textfield.setText("");
-                for (int i = 0; i < string.length() - 1; i++) {
-                    textfield.setText(textfield.getText() + string.charAt(i));
-                }
             }
         }
     }
