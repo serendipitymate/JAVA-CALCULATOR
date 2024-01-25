@@ -134,7 +134,7 @@ public class CalculatorUI implements ActionListener {
         } else {
             for (int i = 0; i < 10; i++) {
                 if (e.getSource() == numberButtons[i]) {
-                    textfield.setText(textfield.getText().concat(String.valueOf(i)));
+                    handleNumberButtonClick(i);
                 }
             }
             
@@ -143,7 +143,7 @@ public class CalculatorUI implements ActionListener {
                 calculatorLogic.handlePercent();
                 return; // Don't continue with the rest of the method
             }
-    
+            
             for (int i = 0; i < functionButtons.length; i++) {
                 if (e.getSource() == functionButtons[i]) {
                     calculatorLogic.performOperation(functionButtons[i].getText().charAt(0));
@@ -155,7 +155,17 @@ public class CalculatorUI implements ActionListener {
             }
         }
     }
-
+    
+    private void handleNumberButtonClick(int digit) {
+        String currentText = textfield.getText();
+    
+        // Handle leading zero
+        if (currentText.equals("0")) {
+            textfield.setText(String.valueOf(digit));
+        } else {
+            textfield.setText(currentText + digit);
+        }
+    }
     
     private void handleModeSelection() {
         String[] modeOptions = {"Convert Currency", "Round Off", "History"};
