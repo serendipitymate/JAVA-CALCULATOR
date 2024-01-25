@@ -8,8 +8,8 @@ public class CalculatorUI implements ActionListener {
     private JFrame frame;
     private JTextField textfield;
     private JButton[] numberButtons = new JButton[10];
-    private JButton[] functionButtons = new JButton[9];
-    private JButton addButton, subButton, mulButton, divButton, decButton, equButton, delButton, clrButton;
+    private JButton[] functionButtons = new JButton[8];
+    private JButton addButton, subButton, mulButton, divButton, decButton, equButton, delButton, clrButton, percentButton;
     private JButton modeButton; // Added mode button
     private JPanel panel;
     private CalculatorLogic calculatorLogic; // Now an instance variable
@@ -53,6 +53,14 @@ public class CalculatorUI implements ActionListener {
         clrButton.setBackground(new Color(135, 206, 250)); // Light Sky Blue
         clrButton.setForeground(Color.WHITE);
         
+        percentButton = new JButton("%");
+        percentButton.addActionListener(this);
+        percentButton.setFont(new Font(Font.MONOSPACED, Font.BOLD, 16));
+        percentButton.setFocusable(false);
+        percentButton.setBounds(270, 430, 80, 50);
+        percentButton.setBackground(new Color(245, 245, 245)); // Light Gray
+        frame.add(percentButton);
+        
         functionButtons[0] = addButton;
         functionButtons[1] = subButton;
         functionButtons[2] = mulButton;
@@ -77,8 +85,8 @@ public class CalculatorUI implements ActionListener {
             numberButtons[i].setFocusable(false);
         }
 
-        clrButton.setBounds(210, 430, 100, 50);
-        delButton.setBounds(90, 430, 100, 50);
+        clrButton.setBounds(160, 430, 100, 50);
+        delButton.setBounds(50, 430, 100, 50);
 
         panel = new JPanel();
         panel.setBounds(50, 100, 300, 300);
@@ -126,6 +134,10 @@ public class CalculatorUI implements ActionListener {
                     textfield.setText(textfield.getText().concat(String.valueOf(i)));
                 }
             }
+            if (e.getSource() == percentButton) {
+                // Handle percent button click event
+                calculatorLogic.handlePercent();
+            }
 
             /*if (e.getSource() == decButton) {
                 textfield.setText(textfield.getText().concat("."));
@@ -150,7 +162,7 @@ public class CalculatorUI implements ActionListener {
             }
         }
     }
-
+    
     private void handleModeSelection() {
         String[] modeOptions = {"Convert Currency", "Round Off", "History"};
 

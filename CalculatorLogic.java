@@ -208,6 +208,27 @@ public class CalculatorLogic extends BaseCalculatorLogic {
         textfield.setText(String.format("%.2f", result));
         updateHistory(num1 + "  " + operator + "  " + num2 + " = " + String.format("%.2f", result));
     }
+    protected void handlePercentOperation(String currentText) {
+        try {
+            double currentValue = Double.parseDouble(currentText);
+            double percentage = currentValue / 100.0;
+            textfield.setText(String.valueOf(percentage));
+        } catch (NumberFormatException ex) {
+            textfield.setText("Error");
+        }
+    }
+
+    public void handlePercent() {
+        String currentText = textfield.getText();
+    
+        // Validate if the current expression is valid for the percent operation
+        if (!isValidExpression(currentText, '%')) {
+            textfield.setText("Error");
+            return;
+        }
+    
+        handlePercentOperation(currentText);
+    }
     
     private void updateHistory(String expression) {
         if (!expression.isEmpty() && !history.contains(expression)) {
