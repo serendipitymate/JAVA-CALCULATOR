@@ -107,51 +107,99 @@ public class CalculatorLogic extends BaseCalculatorLogic {
         }
     }
     
+
     protected void handleCurrencyConversion() {
-        String inputAmount = JOptionPane.showInputDialog(null, "Enter amount to convert:");
+        boolean convertAgain = true;
     
-        if (inputAmount != null && !inputAmount.isEmpty()) {
-            try {
-                double amountToConvert = Double.parseDouble(inputAmount);
+        while (convertAgain) {
+            String inputAmount = JOptionPane.showInputDialog(null, "Enter amount to convert:");
     
-                JComboBox<String> fromCurrencyBox = new JComboBox<>();
-                JComboBox<String> toCurrencyBox = new JComboBox<>();
+            if (inputAmount != null && !inputAmount.isEmpty()) {
+                try {
+                    double amountToConvert = Double.parseDouble(inputAmount);
     
-                fromCurrencyBox.addItem("USD : United States Dollar");
-                fromCurrencyBox.addItem("EUR : Euro");
-                fromCurrencyBox.addItem("GBP : Pound Sterling");
-                fromCurrencyBox.addItem("MYR : Malaysian Ringgit");
+                    JComboBox<String> fromCurrencyBox = new JComboBox<>();
+                    JComboBox<String> toCurrencyBox = new JComboBox<>();
     
-                toCurrencyBox.addItem("USD : United States Dollar");
-                toCurrencyBox.addItem("EUR : Euro");
-                toCurrencyBox.addItem("GBP : Pound Sterling");
-                toCurrencyBox.addItem("MYR : Malaysian Ringgit");
+                    fromCurrencyBox.addItem("USD : United States Dollar");
+                    fromCurrencyBox.addItem("JPY : Japanese Yen");
+                    fromCurrencyBox.addItem("CNY : Chinese Yuan");
+                    fromCurrencyBox.addItem("KRW : South Korean Won");
+                    fromCurrencyBox.addItem("SGD : Singapore Dollar");
+                    fromCurrencyBox.addItem("MYR : Malaysian Ringgit");
+                    fromCurrencyBox.addItem("INR : Indian Rupee");
+                    fromCurrencyBox.addItem("IDR : Indonesian Rupiah");
+                    fromCurrencyBox.addItem("THB : Thai Baht");
+                    fromCurrencyBox.addItem("BND : Brunei Dollar");
+                    fromCurrencyBox.addItem("MMK : Myanmar Kyat");
+                    fromCurrencyBox.addItem("LAK : Laotian Kip");
+                    fromCurrencyBox.addItem("VND : Vietnamese Dong");
+                    fromCurrencyBox.addItem("KHR : Cambodian Riel");
+                    fromCurrencyBox.addItem("PHP : Philippine Peso");
+                    // Add more currencies as needed
+                    
+                    toCurrencyBox.addItem("USD : United States Dollar");
+                    toCurrencyBox.addItem("JPY : Japanese Yen");
+                    toCurrencyBox.addItem("CNY : Chinese Yuan");
+                    toCurrencyBox.addItem("KRW : South Korean Won");
+                    toCurrencyBox.addItem("SGD : Singapore Dollar");
+                    toCurrencyBox.addItem("MYR : Malaysian Ringgit");
+                    toCurrencyBox.addItem("INR : Indian Rupee");
+                    toCurrencyBox.addItem("IDR : Indonesian Rupiah");
+                    toCurrencyBox.addItem("THB : Thai Baht");
+                    toCurrencyBox.addItem("BND : Brunei Dollar");
+                    toCurrencyBox.addItem("MMK : Myanmar Kyat");
+                    toCurrencyBox.addItem("LAK : Laotian Kip");
+                    toCurrencyBox.addItem("VND : Vietnamese Dong");
+                    toCurrencyBox.addItem("KHR : Cambodian Riel");
+                    toCurrencyBox.addItem("PHP : Philippine Peso");
     
-                String[] options = {"OK", "Cancel"};
-                Object[] message = {
-                        "Enter amount to convert:", inputAmount,
-                        "Select source currency:", fromCurrencyBox,
-                        "Select target currency:", toCurrencyBox
-                };
+                    String[] options = {"OK", "Convert Again", "Cancel"};
+                    Object[] message = {
+                            "Enter amount to convert:", inputAmount,
+                            "Select source currency:", fromCurrencyBox,
+                            "Select target currency:", toCurrencyBox
+                    };
     
-                int choice = JOptionPane.showOptionDialog(null, message, "Currency Converter", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+                    int choice = JOptionPane.showOptionDialog(null, message, "Currency Converter", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
     
-                if (choice == 0) { // OK button is pressed
-                    String fromCurrency = fromCurrencyBox.getSelectedItem().toString().split(" ")[0];
-                    String toCurrency = toCurrencyBox.getSelectedItem().toString().split(" ")[0];
+                    if (choice == 0) { // OK button is pressed
+                        String fromCurrency = fromCurrencyBox.getSelectedItem().toString().split(" ")[0];
+                        String toCurrency = toCurrencyBox.getSelectedItem().toString().split(" ")[0];
     
-                    double convertedAmount = convertCurrency(amountToConvert, fromCurrency, toCurrency);
+                        double convertedAmount = convertCurrency(amountToConvert, fromCurrency, toCurrency);
     
-                    JOptionPane.showMessageDialog(
-                            null,
-                            amountToConvert + " " + fromCurrency + " = " + convertedAmount + " " + toCurrency,
-                            "Currency Conversion Result",
-                            JOptionPane.INFORMATION_MESSAGE
-                    );
+                        JOptionPane.showMessageDialog(
+                                null,
+                                amountToConvert + " " + fromCurrency + " = " + convertedAmount + " " + toCurrency,
+                                "Currency Conversion Result",
+                                JOptionPane.INFORMATION_MESSAGE
+                        );
+    
+                        // Ask the user if they want to convert again
+                        choice = JOptionPane.showOptionDialog(
+                                null,
+                                "Do you want to convert again?",
+                                "Convert Again",
+                                JOptionPane.DEFAULT_OPTION,
+                                JOptionPane.QUESTION_MESSAGE,
+                                null,
+                                new Object[]{"Yes", "No"},
+                                "No"
+                        );
+    
+                        convertAgain = (choice == 0); // Continue if "Yes" is chosen
+                    } else {
+                        // If the user clicks "Convert Again" or "Cancel", exit the loop
+                        convertAgain = (choice == 1);
+                    }
+    
+                } catch (NumberFormatException e) {
+                    JOptionPane.showMessageDialog(null, "Invalid input. Please enter a valid number.");
                 }
-    
-            } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(null, "Invalid input. Please enter a valid number.");
+            } else {
+                // If the user clicks Cancel or closes the input dialog, exit the loop
+                convertAgain = false;
             }
         }
     }
