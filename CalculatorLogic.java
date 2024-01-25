@@ -2,6 +2,11 @@ import javax.swing.JTextField;
 import javax.swing.JOptionPane;
 import java.util.ArrayList;
 import java.util.List;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.Scanner;
+import java.io.*;
+import javax.swing.JComboBox;
 
 public class CalculatorLogic extends BaseCalculatorLogic {
     private double num1;
@@ -104,104 +109,168 @@ public class CalculatorLogic extends BaseCalculatorLogic {
     
     protected void handleCurrencyConversion() {
         String inputAmount = JOptionPane.showInputDialog(null, "Enter amount to convert:");
-
+    
         if (inputAmount != null && !inputAmount.isEmpty()) {
             try {
                 double amountToConvert = Double.parseDouble(inputAmount);
-
-                String[] currencies = {"MYR", "SGD", "USD"};
-                String fromCurrency = (String) JOptionPane.showInputDialog(
-                        null,
-                        "Select source currency:",
-                        "Currency Converter",
-                        JOptionPane.QUESTION_MESSAGE,
-                        null,
-                        currencies,
-                        currencies[0]
-                );
-
-                String toCurrency = (String) JOptionPane.showInputDialog(
-                        null,
-                        "Select target currency:",
-                        "Currency Converter",
-                        JOptionPane.QUESTION_MESSAGE,
-                        null,
-                        currencies,
-                        currencies[2]
-                );
-
-                double convertedAmount = convertCurrency(amountToConvert, fromCurrency, toCurrency);
-
-                JOptionPane.showMessageDialog(
-                        null,
-                        amountToConvert + " " + fromCurrency + " = " + convertedAmount + " " + toCurrency,
-                        "Currency Conversion Result",
-                        JOptionPane.INFORMATION_MESSAGE
-                );
-
+    
+                JComboBox<String> fromCurrencyBox = new JComboBox<>();
+                JComboBox<String> toCurrencyBox = new JComboBox<>();
+    
+                fromCurrencyBox.addItem("USD : United States Dollar");
+                fromCurrencyBox.addItem("EUR : Euro");
+                fromCurrencyBox.addItem("GBP : Pound Sterling");
+                fromCurrencyBox.addItem("MYR : Malaysian Ringgit");
+    
+                toCurrencyBox.addItem("USD : United States Dollar");
+                toCurrencyBox.addItem("EUR : Euro");
+                toCurrencyBox.addItem("GBP : Pound Sterling");
+                toCurrencyBox.addItem("MYR : Malaysian Ringgit");
+    
+                String[] options = {"OK", "Cancel"};
+                Object[] message = {
+                        "Enter amount to convert:", inputAmount,
+                        "Select source currency:", fromCurrencyBox,
+                        "Select target currency:", toCurrencyBox
+                };
+    
+                int choice = JOptionPane.showOptionDialog(null, message, "Currency Converter", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+    
+                if (choice == 0) { // OK button is pressed
+                    String fromCurrency = fromCurrencyBox.getSelectedItem().toString().split(" ")[0];
+                    String toCurrency = toCurrencyBox.getSelectedItem().toString().split(" ")[0];
+    
+                    double convertedAmount = convertCurrency(amountToConvert, fromCurrency, toCurrency);
+    
+                    JOptionPane.showMessageDialog(
+                            null,
+                            amountToConvert + " " + fromCurrency + " = " + convertedAmount + " " + toCurrency,
+                            "Currency Conversion Result",
+                            JOptionPane.INFORMATION_MESSAGE
+                    );
+                }
+    
             } catch (NumberFormatException e) {
                 JOptionPane.showMessageDialog(null, "Invalid input. Please enter a valid number.");
             }
         }
     }
+
+    private static final String EXCHANGE_RATE_API = "https://api.exchangerate-api.com/v4/latest/USD";
 
     public double convertCurrency(double amount, String fromCurrency, String toCurrency) {
-        // Simulated fixed exchange rates
-        double myrToUsdRate = 0.25;
-        double sgdToUsdRate = 0.75;
+        try {
+            URL url = new URL(EXCHANGE_RATE_API);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
 
-        double convertedAmount = 0.0;
+            InputStream responseStream = connection.getInputStream();
+            Scanner scanner = new Scanner(responseStream).useDelimiter("\\A");
+            String responseData = scanner.hasNext() ? scanner.next() : "";
 
-        switch (fromCurrency) {
-            case "MYR":
-                convertedAmount = amount * myrToUsdRate;
-                break;
-            case "SGD":
-                convertedAmount = amount * sgdToUsdRate;
-                break;
-            case "USD":
-                convertedAmount = amount; // No conversion needed for USD
-                break;
-            default:
-                break;
+            // Parse JSON response to get exchange rates
+            double fromRate = getExchangeRate(responseData, fromCurrency);
+            double toRate = getExchangeRate(responseData, toCurrency);
+
+            // Calculate converted amount
+            double convertedAmount = amount * (toRate / fromRate);
+
+            // Close resources
+            responseStream.close();
+            connection.disconnect();
+
+            return convertedAmount;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return 0.0; // Handle the exception appropriately in your application
         }
-
-        return convertedAmount;
+    }
+    
+    private double getExchangeRate(String jsonData, String currency) {
+        // Parse JSON to get exchange rate for the specified currency
+        // You may want to use a JSON parsing library for a more robust solution
+        // For simplicity, we'll use a basic string search here
+        String key = "\""+currency+"\":";
+        int index = jsonData.indexOf(key);
+        if (index != -1) {
+            int startIndex = index + key.length();
+            int endIndex = jsonData.indexOf(",", startIndex);
+            if (endIndex == -1) {
+                endIndex = jsonData.indexOf("}", startIndex);
+            }
+            String rateString = jsonData.substring(startIndex, endIndex);
+            return Double.parseDouble(rateString);
+        } else {
+            return 1.0; // Default to 1.0 if the currency is not found
+        }
     }
 
+
+
     protected void handleRoundOff() {
-        String inputAmount = JOptionPane.showInputDialog(null, "Enter amount to round off:");
-
-        if (inputAmount != null && !inputAmount.isEmpty()) {
-            try {
-                double amountToRound = Double.parseDouble(inputAmount);
-
-                int decimalPlaces = Integer.parseInt(
-                        JOptionPane.showInputDialog(null, "Enter number of decimal places:")
-                );
-
-                double roundedAmount = roundOff(amountToRound, decimalPlaces);
-
-                JOptionPane.showMessageDialog(
-                        null,
-                        "Rounded off amount: " + roundedAmount,
-                        "Round Off Result",
-                        JOptionPane.INFORMATION_MESSAGE
-                );
-
-            } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(null, "Invalid input. Please enter a valid number.");
+        boolean continueRoundOff = true;
+    
+        while (continueRoundOff) {
+            String inputAmount = JOptionPane.showInputDialog(null, "Enter amount to round off:");
+    
+            if (inputAmount != null && !inputAmount.isEmpty()) {
+                try {
+                    double amountToRound = Double.parseDouble(inputAmount);
+    
+                    String[] options = {"Ten", "Hundred", "Thousand"};
+                    int choice = JOptionPane.showOptionDialog(
+                            null,
+                            "Select round off option:",
+                            "Round Off Options",
+                            JOptionPane.DEFAULT_OPTION,
+                            JOptionPane.QUESTION_MESSAGE,
+                            null,
+                            options,
+                            options[0]
+                    );
+    
+                    double roundedAmount;
+    
+                    switch (choice) {
+                        case 0:
+                            roundedAmount = roundOffToNearest(amountToRound, 10);
+                            break;
+                        case 1:
+                            roundedAmount = roundOffToNearest(amountToRound, 100);
+                            break;
+                        case 2:
+                            roundedAmount = roundOffToNearest(amountToRound, 1000);
+                            break;
+                        default:
+                            roundedAmount = amountToRound; // Default to no rounding
+                    }
+    
+                    int option = JOptionPane.showOptionDialog(
+                            null,
+                            "Original amount: " + amountToRound + "\nRounded off to nearest " + options[choice] + ": " + roundedAmount,
+                            "Round Off Result",
+                            JOptionPane.DEFAULT_OPTION,
+                            JOptionPane.INFORMATION_MESSAGE,
+                            null,
+                            new Object[]{"OK", "Round Off Again"},
+                            "OK"
+                    );
+    
+                    continueRoundOff = (option == 1); // Continue if "Round Off Again" is chosen
+    
+                } catch (NumberFormatException e) {
+                    JOptionPane.showMessageDialog(null, "Invalid input. Please enter a valid number.");
+                }
+            } else {
+                // If the user clicks Cancel or closes the input dialog, exit the loop
+                continueRoundOff = false;
             }
         }
     }
 
-    public double roundOff(double amount, int decimalPlaces) {
-        if (decimalPlaces < 0) {
-            throw new IllegalArgumentException("Decimal places cannot be negative");
-        }
-
-        double multiplier = Math.pow(10, decimalPlaces);
-        return Math.round(amount * multiplier) / multiplier;
+    
+    private double roundOffToNearest(double amount, int interval) {
+        return Math.round(amount / interval) * interval;
     }
     
     @Override
