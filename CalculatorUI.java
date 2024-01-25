@@ -137,9 +137,11 @@ public class CalculatorUI implements ActionListener {
                     textfield.setText(textfield.getText().concat(String.valueOf(i)));
                 }
             }
+            
+            // Check if the source is the percent button and handle it
             if (e.getSource() == percentButton) {
-                // Handle percent button click event
                 calculatorLogic.handlePercent();
+                return; // Don't continue with the rest of the method
             }
     
             for (int i = 0; i < functionButtons.length; i++) {
@@ -153,6 +155,7 @@ public class CalculatorUI implements ActionListener {
             }
         }
     }
+
     
     private void handleModeSelection() {
         String[] modeOptions = {"Convert Currency", "Round Off", "History"};
