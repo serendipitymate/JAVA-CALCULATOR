@@ -36,6 +36,7 @@ public class CalculatorUI implements ActionListener {
         decButton = new JButton(".");
         equButton = new JButton("=");
         delButton = new JButton("DEL");
+        delButton.addActionListener(e -> calculatorLogic.handleDelete());
         clrButton = new JButton("AC");
         
         textfield.setBackground(new Color(240, 240, 240)); // Light Gray
@@ -126,9 +127,9 @@ public class CalculatorUI implements ActionListener {
                 }
             }
 
-            if (e.getSource() == decButton) {
+            /*if (e.getSource() == decButton) {
                 textfield.setText(textfield.getText().concat("."));
-            }
+            } */
 
             for (int i = 0; i < 9; i++) {
                 if (e.getSource() == functionButtons[i]) {

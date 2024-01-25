@@ -1,6 +1,7 @@
 import javax.swing.JTextField;
 import javax.swing.JOptionPane;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -22,19 +23,129 @@ public class CalculatorLogic extends BaseCalculatorLogic {
 
     @Override
     public void performOperation(char operation) {
-        switch (operation) {
-            case '+':
-            case '-':
-            case '*':
-            case '/':
-                handleArithmeticOperation(operation);
-                break;
-            case '=':
-                handleEqualsOperation();
-                break;
+        String currentText = textfield.getText();
+    
+        // Validate if the current expression is valid
+        if (!isValidExpression(currentText, operation)) {
+            textfield.setText("Error");
+            return;
         }
-        updateHistory(operation);
+    
+        // If the operation is '=', evaluate the entire expression
+        if (operation == '=') {
+            evaluateExpression(currentText);
+            updateHistory(currentText + " = " + String.format("%.2f", result));  // Update history with the entire expression and result
+        } else {
+            // For other operations, append them to the current expression
+            textfield.setText(currentText + operation);
+        }
     }
+    
+    private boolean isValidExpression(String currentText, char operation) {
+        // Check if the current expression is valid for the given operation
+        if (currentText.isEmpty() || currentText.equals("Error")) {
+            return false; // Invalid if the current text is empty or already an error
+        }
+    
+        char lastChar = currentText.charAt(currentText.length() - 1);
+    
+        // Invalid if the last character is an operator and the new operation is also an operator
+        if (isOperator(lastChar) && isOperator(operation)) {
+            return false;
+        }
+    
+        // For all other cases, the expression is considered valid
+        return true;
+    }
+
+    
+    private boolean isOperator(char c) {
+        // Check if the character is an arithmetic operator
+        return c == '+' || c == '-' || c == '*' || c == '/';
+    }
+    
+    private void evaluateExpression(String expression) {
+        try {
+            // Split the expression into individual operations
+            String[] operations = expression.split("(?<=[-+*/=])|(?=[-+*/=])");
+    
+            // Convert the array to a list for easy removal of elements
+            List<String> operationList = new ArrayList<>(Arrays.asList(operations));
+    
+            // Process brackets first
+            while (operationList.contains("(")) {
+                int openIndex = operationList.lastIndexOf("(");
+                int closeIndex = operationList.subList(openIndex, operationList.size()).indexOf(")") + openIndex;
+    
+                if (openIndex >= 0 && closeIndex > openIndex) {
+                    // Evaluate the expression within the brackets
+                    evaluateExpression(String.join("", operationList.subList(openIndex + 1, closeIndex)));
+    
+                    // Replace the bracketed expression with its result
+                    operationList.subList(openIndex, closeIndex + 1).clear();
+                    operationList.add(openIndex, String.valueOf(result));
+                } else {
+                    // Mismatched brackets
+                    textfield.setText("Error");
+                    return;
+                }
+            }
+    
+            // Process powers/exponents
+            for (int i = 0; i < operationList.size(); i++) {
+                if (operationList.get(i).equals("^")) {
+                    double base = Double.parseDouble(operationList.get(i - 1));
+                    double exponent = Double.parseDouble(operationList.get(i + 1));
+                    double result = Math.pow(base, exponent);
+    
+                    // Replace the base, exponent, and "^" with the result
+                    operationList.subList(i - 1, i + 2).clear();
+                    operationList.add(i - 1, String.valueOf(result));
+                    i--; // Move back to the updated position
+                }
+            }
+    
+            // Process multiplication and division
+            for (String operator : new String[]{"*", "/"}) {
+                while (operationList.contains(operator)) {
+                    int operatorIndex = operationList.indexOf(operator);
+    
+                    double operand1 = Double.parseDouble(operationList.get(operatorIndex - 1));
+                    double operand2 = Double.parseDouble(operationList.get(operatorIndex + 1));
+                    double result = operator.equals("*") ? operand1 * operand2 : operand1 / operand2;
+    
+                    // Replace the operands and operator with the result
+                    operationList.subList(operatorIndex - 1, operatorIndex + 2).clear();
+                    operationList.add(operatorIndex - 1, String.valueOf(result));
+                }
+            }
+    
+            // Process addition and subtraction
+            for (String operator : new String[]{"+", "-"}) {
+                while (operationList.contains(operator)) {
+                    int operatorIndex = operationList.indexOf(operator);
+    
+                    double operand1 = Double.parseDouble(operationList.get(operatorIndex - 1));
+                    double operand2 = Double.parseDouble(operationList.get(operatorIndex + 1));
+                    double result = operator.equals("+") ? operand1 + operand2 : operand1 - operand2;
+    
+                    // Replace the operands and operator with the result
+                    operationList.subList(operatorIndex - 1, operatorIndex + 2).clear();
+                    operationList.add(operatorIndex - 1, String.valueOf(result));
+                }
+            }
+    
+            // The final result should be at the first position in the list
+            this.result = Double.parseDouble(operationList.get(0));
+    
+            // Update the textfield with the result
+            textfield.setText(String.format("%.2f", this.result));
+        } catch (NumberFormatException | ArithmeticException e) {
+            // Handle invalid number format or arithmetic errors
+            textfield.setText("Error");
+        }
+    }
+
 
     @Override
     public void handleModeSelection(int modeChoice) {
@@ -95,19 +206,15 @@ public class CalculatorLogic extends BaseCalculatorLogic {
                 break;
         }
         textfield.setText(String.format("%.2f", result));
-        updateHistory('=');
+        updateHistory(num1 + "  " + operator + "  " + num2 + " = " + String.format("%.2f", result));
     }
     
-    private void updateHistory(char operation) {
-        if (operation == '=') {
-            String expression = num1 + " " + operator + " " + num2 + " = " + String.format("%.2f", result);
-            if (!history.contains(expression)) {
-                history.add(expression);
-            }
+    private void updateHistory(String expression) {
+        if (!expression.isEmpty() && !history.contains(expression)) {
+            history.add(expression);
         }
     }
     
-
     protected void handleCurrencyConversion() {
         boolean convertAgain = true;
     
@@ -230,14 +337,12 @@ public class CalculatorLogic extends BaseCalculatorLogic {
             return convertedAmount;
         } catch (IOException e) {
             e.printStackTrace();
-            return 0.0; // Handle the exception appropriately in your application
+            return 0.0; // Handle the exception appropriately 
         }
     }
     
     private double getExchangeRate(String jsonData, String currency) {
         // Parse JSON to get exchange rate for the specified currency
-        // You may want to use a JSON parsing library for a more robust solution
-        // For simplicity, we'll use a basic string search here
         String key = "\""+currency+"\":";
         int index = jsonData.indexOf(key);
         if (index != -1) {
@@ -252,8 +357,17 @@ public class CalculatorLogic extends BaseCalculatorLogic {
             return 1.0; // Default to 1.0 if the currency is not found
         }
     }
+    
+    public void handleDelete() {
+        String currentText = textfield.getText();
 
-
+        // Check if the current expression is not empty
+        if (!currentText.isEmpty() && !currentText.equals("Error")) {
+            // Remove the last character from the current expression
+            String newText = currentText.substring(0, currentText.length() - 1);
+            textfield.setText(newText);
+        }
+    }
 
     protected void handleRoundOff() {
         boolean continueRoundOff = true;
@@ -325,19 +439,20 @@ public class CalculatorLogic extends BaseCalculatorLogic {
     public void handleHistory() {
         StringBuilder historyText = new StringBuilder("Calculation History:\n");
         for (String expression : history) {
-        historyText.append(expression).append("\n");
+            historyText.append(expression).append("\n");
         }
 
         // Add "Clear History" button
         Object[] options = {"OK", "Clear History"};
         int choice = JOptionPane.showOptionDialog(null, historyText.toString(), "Calculation History",
-        JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
+                JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
 
         if (choice == 1) {
             clearHistory();
-        // Do not call handleHistory() recursively after clearing
+            // Do not call handleHistory() recursively after clearing
         }
-    }    
+    }
+
     private void clearHistory() {
         history.clear();
         JOptionPane.showMessageDialog(null, "History Cleared", "Clear History", JOptionPane.INFORMATION_MESSAGE);
