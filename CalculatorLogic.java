@@ -8,6 +8,7 @@ import java.net.URL;
 import java.util.Scanner;
 import java.io.*;
 import javax.swing.JComboBox;
+import java.text.DecimalFormat;
 
 public class CalculatorLogic extends BaseCalculatorLogic {
     private double num1;
@@ -318,10 +319,13 @@ public class CalculatorLogic extends BaseCalculatorLogic {
                         String toCurrency = toCurrencyBox.getSelectedItem().toString().split(" ")[0];
     
                         double convertedAmount = convertCurrency(amountToConvert, fromCurrency, toCurrency);
-    
+                        
+                        DecimalFormat df = new DecimalFormat("#.##");
+                        String formattedResult = df.format(convertedAmount);
+                        
                         JOptionPane.showMessageDialog(
                                 null,
-                                amountToConvert + " " + fromCurrency + " = " + convertedAmount + " " + toCurrency,
+                                amountToConvert + " " + fromCurrency + " = " + formattedResult + " " + toCurrency,
                                 "Currency Conversion Result",
                                 JOptionPane.INFORMATION_MESSAGE
                         );
@@ -427,58 +431,58 @@ public class CalculatorLogic extends BaseCalculatorLogic {
         while (continueRoundOff) {
             String inputAmount = JOptionPane.showInputDialog(null, "Enter amount to round off:");
     
-        if (inputAmount != null && !inputAmount.isEmpty()) {
-            if(inputAmount.contains("."))
-                {
-                    JOptionPane.showMessageDialog(null, "Decimal number is not within standard 1 to 3 syllabus!", "Warning", JOptionPane.WARNING_MESSAGE);
-                    break;
-                }
-            try {
-                double amountToRound = Double.parseDouble(inputAmount);
-
-                String[] options = {"Ten", "Hundred", "Thousand"};
-                int choice = JOptionPane.showOptionDialog(
-                        null,
-                        "Select round off option:",
-                        "Round Off Options",
-                        JOptionPane.DEFAULT_OPTION,
-                        JOptionPane.QUESTION_MESSAGE,
-                        null,
-                        options,
-                        options[0]
-                );
-
-                double roundedAmount;
+            if (inputAmount != null && !inputAmount.isEmpty()) {
+                if (inputAmount.contains(".")) {
+                    // Display a warning and allow the user to re-enter the value
+                    JOptionPane.showMessageDialog(null, "Decimal number is not within standard 1 to 3 syllabus! Enter a whole number", "Warning", JOptionPane.WARNING_MESSAGE);
+                } else {
+                    try {
+                        int amountToRound = Integer.parseInt(inputAmount);
     
-                switch (choice) {
-                    case 0:
-                        roundedAmount = roundOffToNearest(amountToRound, 10);
-                        break;
-                    case 1:
-                        roundedAmount = roundOffToNearest(amountToRound, 100);
-                        break;
-                    case 2:
-                        roundedAmount = roundOffToNearest(amountToRound, 1000);
-                        break;
-                    default:
-                        roundedAmount = amountToRound; // Default to no rounding
-                }
-
-                int option = JOptionPane.showOptionDialog(
-                    null,
-                    "Original amount: " + amountToRound + "\nRounded off to nearest " + options[choice] + ": " + roundedAmount,
-                    "Round Off Result",
-                    JOptionPane.DEFAULT_OPTION,
-                    JOptionPane.INFORMATION_MESSAGE,
-                    null,
-                    new Object[]{"OK", "Round Off Again"},
-                    "OK"
-                );
-
-                continueRoundOff = (option == 1); // Continue if "Round Off Again" is chosen
-
-                } catch (NumberFormatException e) {
-                    JOptionPane.showMessageDialog(null, "Invalid input. Please enter a valid number.");
+                        String[] options = {"Ten", "Hundred", "Thousand"};
+                        int choice = JOptionPane.showOptionDialog(
+                                null,
+                                "Select round off option:",
+                                "Round Off Options",
+                                JOptionPane.DEFAULT_OPTION,
+                                JOptionPane.QUESTION_MESSAGE,
+                                null,
+                                options,
+                                options[0]
+                        );
+    
+                        int roundedAmount;
+    
+                        switch (choice) {
+                            case 0:
+                                roundedAmount = roundOffToNearest(amountToRound, 10);
+                                break;
+                            case 1:
+                                roundedAmount = roundOffToNearest(amountToRound, 100);
+                                break;
+                            case 2:
+                                roundedAmount = roundOffToNearest(amountToRound, 1000);
+                                break;
+                            default:
+                                roundedAmount = amountToRound; // Default to no rounding
+                        }
+    
+                        int option = JOptionPane.showOptionDialog(
+                                null,
+                                "Original amount: " + amountToRound + "\nRounded off to nearest " + options[choice] + ": " + roundedAmount,
+                                "Round Off Result",
+                                JOptionPane.DEFAULT_OPTION,
+                                JOptionPane.INFORMATION_MESSAGE,
+                                null,
+                                new Object[]{"OK", "Round Off Again"},
+                                "OK"
+                        );
+    
+                        continueRoundOff = (option == 1); // Continue if "Round Off Again" is chosen
+    
+                    } catch (NumberFormatException e) {
+                        JOptionPane.showMessageDialog(null, "Invalid input. Please enter a valid number.");
+                    }
                 }
             } else {
                 // If the user clicks Cancel or closes the input dialog, exit the loop
@@ -487,9 +491,10 @@ public class CalculatorLogic extends BaseCalculatorLogic {
         }
     }
 
+
     
-    private double roundOffToNearest(double amount, int interval) {
-        return Math.round(amount / interval) * interval;
+    private int roundOffToNearest(double amount, int interval) {
+        return (int) Math.round(amount / interval) * interval;
     }
     
     @Override

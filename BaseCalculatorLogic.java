@@ -11,6 +11,6 @@ public abstract class BaseCalculatorLogic {
     public abstract void handleModeSelection(int modeChoice);
 
     public abstract void handleNegation();
-
+    
     public abstract void handleHistory();
 }
